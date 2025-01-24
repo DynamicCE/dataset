@@ -1,6 +1,6 @@
 # Kripto Trading Strateji Analizi
 
-Kripto para piyasalarında çeşitli trading stratejilerinin test edilmesi ve analizi için geliştirilen bir framework.
+Kripto para piyasalarında çeşitli trading stratejilerinin test edilmesi ve analizi için geliştirilen bir proje.
 Datanın büyük bölümü localde.
 
 ## Proje Yapısı
