@@ -1,6 +1,7 @@
 # Kripto Trading Strateji Analizi
 
 Kripto para piyasalarında çeşitli trading stratejilerinin test edilmesi ve analizi için geliştirilen bir framework.
+Datanın büyük bölümü localde.
 
 ## Proje Yapısı
 
@@ -17,9 +18,7 @@ Kripto para piyasalarında çeşitli trading stratejilerinin test edilmesi ve an
 └── docs/            # Dokümantasyon
 ```
 
-## Gereksinimler
 
-Temel gereksinimler `requirements.txt` dosyasında listelenmiştir.
 
 ## Lisans
 
