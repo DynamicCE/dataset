@@ -1,0 +1,121 @@
+//@version=6
+strategy("Inside Bar + HV with Donchian Trailing", shorttitle="IB+HV+Donchian", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+// === Tarihsel Volatilite Hesaplamaları ===
+length = input.int(10, minval=1, title="HV Periyodu")
+annual = 365
+per = timeframe.isintraday or (timeframe.isdaily and timeframe.multiplier == 1) ? 1 : 7
+hv = 100 * ta.stdev(math.log(close / close[1]), length) * math.sqrt(annual / per)
+hv_increase = (hv - hv[1]) / hv[1] * 150
+
+
+
+
+// === Ana Bar Ayarları ===
+showVolumeThreshold = input.bool(false, title="Hacim Eşiğini Göster")
+lineColor = input.color(color.new(#b2b5be, 0), title="Çizgi Rengi")
+insideBarColor = color.orange
+lineWidth = input.int(2, title="Çizgi Kalınlığı")
+
+// === Çizgi Stili Seçenekleri ===
+styleOption = input.string("────", title="Çizgi Stili", options=["────", "┈┈┈", "╌╌╌"])
+lineStyle = switch styleOption
+    "┈┈┈" => line.style_dotted
+    "╌╌╌" => line.style_dashed
+    => line.style_solid
+
+// === Inside Bar Fonksiyonu ===
+isInsideBar() =>
+    high[1] > high and low[1] < low
+
+// === Inside Bar Renklendirme ===
+barcolor(isInsideBar() ? insideBarColor : na, title="Inside Bar")
+
+// === Değişkenler ===
+var float mhigh = na
+var float mlow = na
+var line mhighLine = na
+var line mlowLine = na
+var bool breakoutOccurred = false
+var bool breakdownOccurred = false
+var int yellowCandleIndex = na
+var float entryLongLow = na
+var float entryShortHigh = na
+
+// === Mother Bar Mantığı ===
+if isInsideBar()
+    mhigh := high[1]
+    mlow := low[1]
+    
+    if not na(mhighLine)
+        line.delete(mhighLine)
+    if not na(mlowLine)
+        line.delete(mlowLine)
+        
+    mhighLine := line.new(bar_index[1], mhigh, bar_index + 10, mhigh, color=lineColor, width=lineWidth, style=lineStyle)
+    mlowLine := line.new(bar_index[1], mlow, bar_index + 10, mlow, color=lineColor, width=lineWidth, style=lineStyle)
+    
+    breakoutOccurred := false
+    breakdownOccurred := false
+
+// === Hacim Eşiği ===
+volumeThreshold = showVolumeThreshold ? 100000 : na
+
+// === Kırılım/Kırılış Mantığı ve HV Koşulu ===
+breakout = not na(mhigh) and (close > mhigh) and (hv_increase >= 35) and not breakoutOccurred
+breakdown = not na(mlow) and (close < mlow) and (hv_increase >= 35) and not breakdownOccurred
+
+// === Alım/Satım Koşulları ===
+longCondition = breakout
+shortCondition = breakdown
+
+// === İşaret Çizimleri ===
+plotshape(longCondition, title="AL", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.normal)
+plotshape(shortCondition, title="SAT", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.normal)
+
+// === STRATEJİ GİRİŞLERİ ===
+if (longCondition)
+    strategy.entry("Long", strategy.long)
+    breakoutOccurred := true
+    entryLongLow := low
+
+if (shortCondition)
+    strategy.entry("Short", strategy.short)
+    breakdownOccurred := true
+    entryShortHigh := high
+
+// === DONCHIAN KANALI İLE TRAILING STOP ===
+donchianPeriod = input.int(20, "Donchian Stop Periyodu", minval=1)
+donchianHigh   = ta.highest(high, donchianPeriod)
+donchianLow    = ta.lowest(low, donchianPeriod)
+
+// === POZİSYONDA İSE STOP KOŞULLARI ===
+if strategy.position_size > 0
+    // İlk stop koşulu: entryLongLow altında mum kapanışı
+    if close < entryLongLow
+        strategy.close("Long", comment="Long Stop (Kapanış)")
+
+    // Donchian trailing stop: close < donchianLow ise stop
+    if close < donchianLow
+        strategy.close("Long", comment="Donchian Stop (Long)")
+
+if strategy.position_size < 0
+    // İlk stop koşulu: entryShortHigh üzerinde mum kapanışı
+    if close > entryShortHigh
+        strategy.close("Short", comment="Short Stop (Kapanış)")
+
+    // Donchian trailing stop: close > donchianHigh ise stop
+    if close > donchianHigh
+        strategy.close("Short", comment="Donchian Stop (Short)")
+
+// === DONCHIAN KANALINI GÖRSELLEŞTİRME ===
+plot(donchianHigh, color=color.new(color.red, 0), linewidth=2, title="Donchian High")
+plot(donchianLow, color=color.new(color.green, 0), linewidth=2, title="Donchian Low")
+
+// === Sarı Mum Görselleştirme ===
+barcolor((breakout and not breakoutOccurred) or (breakdown and not breakdownOccurred) ? color.yellow : na, title="Sarı Mum")
+
+if (breakout)
+    breakoutOccurred := true
+if (breakdown)
+    breakdownOccurred := true

@@ -1,25 +1,33 @@
-# Kripto Trading Strateji Analizi
+# Ethereum Trading Strategy Backtester
 
-Kripto para piyasalarında çeşitli trading stratejilerinin test edilmesi ve analizi için geliştirilen bir proje.
-Datanın büyük bölümü localde.
+Bu proje, Inside Bar + HV with Donchian Trailing stratejisini Ethereum üzerinde test etmek için geliştirilmiştir.
 
-## Proje Yapısı
+## Kurulum
 
-```
-.
-├── data/               # Veri dosyaları
-│   ├── raw/           # Ham veriler
-│   └── processed/     # İşlenmiş veriler
-├── strategies/        # Trading stratejileri
-├── analysis/         # Analiz sonuçları
-│   ├── patterns/     # Tekrar eden yapılar
-│   ├── statistics/   # İstatistikler
-│   └── results/      # Test sonuçları
-└── docs/            # Dokümantasyon
+```bash
+pip install -r requirements.txt
 ```
 
+## Kullanım
 
+1. Ethereum verilerinizi CSV formatında projenin ana dizinine yerleştirin
+2. Aşağıdaki komutu çalıştırın:
 
-## Lisans
+```bash
+python strategy_runner.py
+```
 
-Bu proje MIT lisansı altında lisanslanmıştır.
+## Sonuçlar
+
+Backtest sonuçları `analysis/results/` dizininde oluşturulacaktır:
+
+- `equity_curve.png`: Sermaye eğrisi grafiği
+- `performance_metrics.csv`: Performans metrikleri
+
+## Strateji Detayları
+
+- Inside Bar pattern tespiti
+- Tarihsel Volatilite (HV) filtresi
+- Donchian Channel bazlı trailing stop
+- %100 pozisyon büyüklüğü
+- %0.2 komisyon oranı
